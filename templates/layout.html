@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Slack podroba</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bulma.min.css') }}">
+    <script defer type="text/javascript" src="{{ url_for('static', filename='all.js') }}"></script>
+    <script defer type="text/javascript" src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <script defer type="text/javascript" src="{{ url_for('static', filename='index.js') }}"></script>
+    {% block scripts %}
+    {% endblock %}
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="#">
+            <img src="https://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox"
+                 width="112" height="28">
+        </a>
+        <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+            <a class="navbar-item" href="{{ url_for('index') }}">
+                Home
+            </a>
+
+        </div>
+    </div>
+</nav>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="notification">
+            <button class="delete"></button>
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% block body %}
+{% endblock %}
+
+</body>
+</html>

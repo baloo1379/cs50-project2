@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port),
+                loginForm = document.getElementById('login_form');
+
+            if (localStorage.getItem("nickname") !== null) {
+                const nickname = localStorage.getItem("nickname");
+                console.log("nickname in localStorage:", nickname);
+                loginForm.nickname.value = nickname;
+            }
+
+            if (localStorage.getItem("currentChanel") !== null) {
+                const channel = localStorage.getItem("currentChanel");
+                console.log("nickname in localStorage:", channel);
+                loginForm.channel.value = channel;
+            }
+
+            loginForm.addEventListener('submit', event => {
+                event.preventDefault();
+                let nickname = loginForm.nickname.value,
+                    channelIndex = loginForm.channel.selectedIndex;
+                localStorage.setItem("nickname", nickname);
+                localStorage.setItem("currentChanel", channelIndex);
+                loginForm.submit();
+            });
+
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <section id="login" class="hero is-info is-medium">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">Welcome</h1>
+                <p class="subtitle">Type your nick and connect to channel</p>
+                <div class="level">
+                    <div class="box level-left">
+                        <form action="/" method="post" class="field has-addons" id="login_form">
+                            <div class="control">
+                                <input type="text" class="input" name="nickname" id="nickname"
+                                       placeholder="Your nickname..." autocomplete="off">
+                            </div>
+                            <div class="control">
+                                <div class="select">
+                                    <select name="channel" id="channel">
+                                        {% for channel in channels %}
+                                            <option value="{{ channel.index }}">{{ channel.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control">
+                                <input type="submit" class="button" id="send" name="send" value="Connect">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

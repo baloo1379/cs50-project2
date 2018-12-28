@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port),
+                messageForm = document.getElementById('message_form'),
+                userList = document.getElementById("users_list"),
+                nickname, channelIndex;
+
+            if (localStorage.getItem("nickname") !== null) {
+                nickname = localStorage.getItem("nickname");
+                channelIndex = localStorage.getItem("currentChanel");
+                console.log("nickname in localStorage:", nickname);
+                console.log("channel in localStorage:", channelIndex);
+
+            }
+
+            socket.on("connect", () => {
+                registerOnChannel(socket, nickname, channelIndex);
+            });
+
+
+            messageForm.addEventListener('submit', event => {
+                event.preventDefault();
+                let msg = messageForm.message.value;
+                msg = msg.trim();
+                console.log("msg=\"" + msg + "\"");
+                if (msg !== "") {
+                    sendMessage(socket, nickname, msg, channelIndex);
+                    messageForm.message.value = null;
+                }
+            });
+
+            socket.on("write_message", data => {
+                let messageContainer = document.getElementById('message_list'),
+                    message = document.createElement("div"),
+                    receivedNickname = data.nickname,
+                    receivedText = data.message;
+
+                console.log("new message: ", receivedText, "from", receivedNickname);
+
+                message.classList.add("box");
+                if (receivedNickname === nickname) {
+                    message.classList.add("has-text-right");
+                }
+
+                message.innerHTML = `<p class="is-size-7 has-text-grey is-capitalized has-text-weight-light">${receivedNickname}</p><p>${receivedText}</p>`;
+                messageContainer.append(message);
+
+            });
+
+            socket.on("current_client_list", data => {
+                let remoteList = JSON.parse(data.users),
+                    li;
+
+                console.log(remoteList);
+                while (userList.firstChild) {
+                    userList.removeChild(userList.firstChild);
+                }
+
+                for (let i = 0; i < remoteList.length; i++) {
+                    li = document.createElement("li");
+                    li.innerText = remoteList[i];
+                    userList.append(li);
+                }
+
+
+            });
+
+        });
+    </script>
+    <style>
+        .box {
+            padding: 0.7rem;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <aside class="menu">
+        <p class="menu-label">{{ channel.name }}</p>
+        <ul class="menu-list" id="users_list"></ul>
+    </aside>
+    <article class="section">
+
+        <div id="message_list">
+            {% for message in channel.messages %}
+                {% if user == message.author.name %}
+                    <div class="box has-text-right">
+                {% else %}
+                    <div class="box">
+                {% endif %}
+
+            <p class="is-size-7 has-text-grey is-capitalized has-text-weight-light">
+
+                {{ message.author.name }}
+            </p>
+            <p>
+                {{ message.message }}
+            </p>
+            </div>
+            {% endfor %}
+            </div>
+    </article>
+    <form id="message_form">
+        <input type="text" id="message" name="message" autocomplete="off" class="input">
+        <input type="submit" id="submit_message" name="submit_message" class="button">
+    </form>
+
+{% endblock %}
