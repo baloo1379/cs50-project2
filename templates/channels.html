@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let aList = document.querySelectorAll("a.channel");
+            aList.forEach(element=>{
+                element.addEventListener('click', () => {
+                    let link = element.getAttribute("href");
+                    localStorage.setItem("currentChanel", link[13]);
+                });
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <section class="section">
+        <aside class="menu">
+            <p class="menu-label">
+                Available channels
+            </p>
+            <ul class="menu-list">
+                {% for channel in channels %}
+                    <li><a class="channel" href="{{ url_for("channels_view", ch=channel.index) }}">{{ channel.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </aside>
+    </section>
+
+{% endblock %}

@@ -8,13 +8,18 @@
     <script defer type="text/javascript" src="{{ url_for('static', filename='all.js') }}"></script>
     <script defer type="text/javascript" src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
     <script defer type="text/javascript" src="{{ url_for('static', filename='index.js') }}"></script>
+    <style>
+        html {
+            overflow-y: initial;
+        }
+    </style>
     {% block scripts %}
     {% endblock %}
 </head>
 <body>
 <nav class="navbar">
     <div class="navbar-brand">
-        <a class="navbar-item" href="#">
+        <a class="navbar-item" href="{{ url_for('channels_view') }}">
             <img src="https://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox"
                  width="112" height="28">
         </a>
@@ -30,7 +35,12 @@
             <a class="navbar-item" href="{{ url_for('index') }}">
                 Home
             </a>
-
+            <a class="navbar-item" href="{{ url_for('channels_view') }}">
+                Channel list
+            </a>
+            <a class="navbar-item" href="{{ url_for('create_channel') }}">
+                Create own channel
+            </a>
         </div>
     </div>
 </nav>

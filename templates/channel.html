@@ -6,7 +6,7 @@
             let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port),
                 messageForm = document.getElementById('message_form'),
                 userList = document.getElementById("users_list"),
-                nickname, channelIndex;
+                nickname, channelIndex, prevNickname;
 
             if (localStorage.getItem("nickname") !== null) {
                 nickname = localStorage.getItem("nickname");
@@ -36,18 +36,34 @@
                 let messageContainer = document.getElementById('message_list'),
                     message = document.createElement("div"),
                     receivedNickname = data.nickname,
-                    receivedText = data.message;
+                    receivedText = data.message,
+                    author_paragraph = document.createElement("p"),
+                    text_paragraph = document.createElement("p");
 
                 console.log("new message: ", receivedText, "from", receivedNickname);
 
-                message.classList.add("box");
+
+                message.classList.add("message_element");
+                author_paragraph.classList.add("has-text-weight-light", "message_author");
+                author_paragraph.innerText = receivedNickname;
+                text_paragraph.classList.add("box", "message_text");
+                text_paragraph.innerText = receivedText;
                 if (receivedNickname === nickname) {
                     message.classList.add("has-text-right");
+                    text_paragraph.classList.add("current_user");
                 }
 
-                message.innerHTML = `<p class="is-size-7 has-text-grey is-capitalized has-text-weight-light">${receivedNickname}</p><p>${receivedText}</p>`;
+                if (prevNickname !== receivedNickname) {
+                    console.log("Author not reapeted", prevNickname, nickname);
+                    message.append(author_paragraph);
+                } else {
+                    console.log("Author reapeted", prevNickname, nickname);
+                    message.classList.add("message_author_repeated")
+                }
+                message.append(text_paragraph);
                 messageContainer.append(message);
-
+                messageContainer.scrollIntoView({block: "end", behavior: "smooth"});
+                prevNickname = receivedNickname;
             });
 
             socket.on("current_client_list", data => {
@@ -71,40 +87,117 @@
         });
     </script>
     <style>
-        .box {
-            padding: 0.7rem;
+        .message_element {
+            margin: 0.7rem 0 1px 0;
+        }
+
+        .message_author_repeated {
+            margin: 1px 0;
+        }
+
+        .message_text {
+            padding: 0.35rem 0.7rem;
+            background-color: rgb(241, 240, 240);
+            color: #1d2129;
+            border-radius: 23px;
+            display: inline-block;
+            font-size: 14px;
+            box-shadow: none;
+        }
+
+        .current_user {
+            background-color: #0084ff;
+            color: white;
+        }
+
+        .message_author {
+            padding: 0 0.7rem;
+            font-size: 12px;
+        }
+
+        .message_view {
+            overflow-y: scroll;
+            height: calc(100vh - 88px);
+            padding: 0 0.7rem;
+        }
+
+        @media only screen and (max-width: 768px) {
+            .message_view {
+                height: calc(100vh - 124px);
+            }
         }
     </style>
 {% endblock %}
 {% block body %}
-    <aside class="menu">
-        <p class="menu-label">{{ channel.name }}</p>
-        <ul class="menu-list" id="users_list"></ul>
-    </aside>
-    <article class="section">
+    <div class="container is-fluid is-marginless">
+        <div class="columns is-paddingless is-marginless">
+            <aside class="column is-one-fifth  has-background-white-ter is-paddingless">
+                <h2 class="title has-text-centered is-marginless has-background-grey-lighter">
+                    {{ channel.name }}
+                </h2>
+                <div class="menu is-hidden-mobile">
+                    <p class="menu-label">Connected users</p>
+                    <ul class="menu-list" id="users_list"></ul>
+                </div>
+            </aside>
+            <section class="column is-paddingless">
+                <article class="message_view">
 
-        <div id="message_list">
-            {% for message in channel.messages %}
-                {% if user == message.author.name %}
-                    <div class="box has-text-right">
-                {% else %}
-                    <div class="box">
-                {% endif %}
+                    <div id="message_list">
+                        {% for message in channel.messages %}
 
-            <p class="is-size-7 has-text-grey is-capitalized has-text-weight-light">
 
-                {{ message.author.name }}
-            </p>
-            <p>
-                {{ message.message }}
-            </p>
-            </div>
-            {% endfor %}
-            </div>
-    </article>
-    <form id="message_form">
-        <input type="text" id="message" name="message" autocomplete="off" class="input">
-        <input type="submit" id="submit_message" name="submit_message" class="button">
-    </form>
+
+
+                            {% if user == message.author.name %}
+                                {% if loop.previtem is defined and message.author.name == loop.previtem.author.name %}
+                                    <div class="message_element has-text-right message_author_repeated">
+                                {% else %}
+                                    <div class="message_element has-text-right">
+                                {% endif %}
+                            {% else %}
+                                {% if loop.previtem is defined and message.author.name == loop.previtem.author.name %}
+                                    <div class="message_element message_author_repeated">
+                                {% else %}
+                                    <div class="message_element">
+                                {% endif %}
+                            {% endif %}
+
+
+                        {% if loop.previtem is defined and message.author.name == loop.previtem.author.name %}
+
+                        {% else %}
+                            <p class="has-text-weight-light message_author">
+                                {{ message.author.name }}
+                            </p>
+                        {% endif %}
+
+                        {% if user == message.author.name %}
+                            <p class="box message_text current_user">
+                                {% else %}
+                            <p class="box message_text">
+                        {% endif %}
+
+                        {{ message.message }}
+                        </p>
+                        </div>
+                        {% endfor %}
+                        </div>
+                </article>
+                <div class="container is-fluid">
+                    <form id="message_form" class="field has-addons">
+                        <div class="control is-expanded">
+                            <input type="text" id="message" name="message" autocomplete="off" class="input">
+                        </div>
+                        <div class="control">
+                            <button type="submit" id="submit_message" name="submit_message" class="button">
+                                <i class="fas fa-share"></i>&nbsp;Wyślij
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
 
 {% endblock %}

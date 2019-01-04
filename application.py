@@ -35,7 +35,48 @@ def index():
         if new_user in users:
             flash("User with that name is already logged")
             return redirect("/", "303")
-        return render_template("channel.html", channel=channels[new_user.channel], user=u_name)
+        session["user"] = u_name
+        session["channel"] = u_channel
+        return redirect("/channel")
+
+
+@app.route("/channel")
+def channel():
+    if session.get("user"):
+        u_name = session["user"]
+        u_channel = session["channel"]
+        return render_template("channel.html", channel=channels[u_channel], user=u_name, prev_user="None")
+    else:
+        flash("You are not logged")
+        return redirect("/", "303")
+
+
+@app.route("/channels", methods={"GET"})
+def channels_view():
+    if request.method == "GET":
+        if session.get("user"):
+            u_name = session["user"]
+            if request.args.get("ch"):
+                new_channel = int(request.args.get("ch"))
+                session["channel"] = new_channel
+                return redirect("/channel")
+            else:
+                return render_template("channels.html", channels=channels, user=u_name)
+        else:
+            flash("You are not logged")
+            return redirect("/", "303")
+
+
+@app.route("/create_channel", methods=["GET", "POST"])
+def create_channel():
+    if request.method == "GET":
+        return render_template("create_channel.html")
+    else:
+        new_channel_name = request.form.get("channel_name")
+        new_channel = Channel(index=len(channels), name=new_channel_name)
+        channels.append(new_channel)
+        flash("Channel created successfully")
+        return redirect("/channels")
 
 
 @socketio.on("register_on_channel")
